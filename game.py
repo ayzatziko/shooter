@@ -1,20 +1,89 @@
 import pygame
 pygame.init()
 
+class World(object):
+    def __init__(self):
+        self.run = True
+        self.p = Player()
+
+    def process(self):
+        self.p.process()
+
+    def draw(self, win):
+        self.p.draw(win)
+
+class Player(object):
+    _standing = 0
+    _right = 1
+    _left = -1
+    _up = 1
+    _down = -1
+
+    def __init__(self):
+        self.x = 30
+        self.y = 400
+        self.w = 64
+        self.h = 64
+        self.v = 5
+        self.direct = 0
+        self.isJump = False
+        self.jumpCount = 5
+        self.jumpHeight = 10
+        self.walkCount = 0
+
+    def walkLeft(self):
+        self.walkCount += 1
+        self.direct = self._left
+        if self.x > self.v:
+            self.x -= self.v
+
+    def walkRight(self):
+        self.walkCount += 1
+        self.direct = self._right
+        if self.x + self.w < displayW - self.v:
+            self.x += self.v
+
+    def jump(self):
+        if not self.isJump:
+            self.isJump = True
+
+    def processJump(self):
+        if not self.isJump:
+            return
+
+        h = self.jumpHeight
+        d = self._up
+        if h <= 0:
+            d = self._down
+
+        self.jumpHeight -= 1
+        if self.jumpHeight <= -11:
+            self.jumpHeight = 10
+            self.isJump = False
+
+        h = h ** 2 * d / 2
+        self.y = self.y - h
+
+    def process(self):
+        self.processJump()
+
+    def draw(self, win):
+        if self.walkCount >= 27:
+            self.walkCount = 0
+
+        i = self.walkCount // 3
+        if self.direct == self._standing: # standing
+            win.blit(stand, (self.x, self.y))
+        elif self.direct == self._right: # going right
+            win.blit(walkRight[i], (self.x, self.y))
+        elif self.direct == self._left: # going left
+            win.blit(walkLeft[i], (self.x, self.y))
+
 caption = "Shooter"
 displayW = 500
 displayH = 500
 fps = 27
-world = {
-    'run': True,
-    'vel': 5,
-    'cx': 30, 'cy': 400, 'cw': 64, 'ch': 64,
-    'isJump': False,
-    'jumpHeight': 10,
-    'jumpCount': 5,
-    'walkCount': 0,
-    'char_dir': 0,
-}
+world = World()
 
 # images
 walkRight = [pygame.image.load('R1.png'),pygame.image.load('R2.png'),pygame.image.load('R3.png'),pygame.image.load('R4.png'),pygame.image.load('R5.png'),pygame.image.load('R6.png'),pygame.image.load('R7.png'),pygame.image.load('R8.png'),pygame.image.load('R9.png')]
@@ -28,60 +97,26 @@ pygame.display.set_caption(caption)
 def handle_events(w):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            w['run'] = False
+            w.run = False
 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
-        world['walkCount'] += 1
-        world['char_dir'] = -1
-        if w['cx'] <= w['vel']:
-            pass
-        else:
-            w['cx'] = w['cx'] - w['vel']
-    elif keys[pygame.K_RIGHT]:
-        world['walkCount'] += 1
-        world['char_dir'] = 1
-        if w['cx'] + w['cw'] >= displayW - w['vel']:
-            pass
-        else:
-            w['cx'] = w['cx'] + w['vel']
+        w.p.walkLeft()
+    if keys[pygame.K_RIGHT]:
+        w.p.walkRight()
+    if keys[pygame.K_UP]:
+        w.p.jump()
 
-    if not w['isJump']:
-        if keys[pygame.K_UP]:
-            w['isJump'] = True
-    else:
-        h = w['jumpHeight']
-        d = 1
-        if h <= 0:
-            d = -1
-
-        w['jumpHeight'] -= 1
-        if w['jumpHeight'] == -11:
-            w['jumpHeight'] = 10
-            w['isJump'] = False
-
-        h = h ** 2 * d / 2
-        w['cy'] = w['cy'] - h
+    w.process()
 
     return w
 
 def draw():
     win.blit(bg, (0, 0))
-
-    if world['walkCount'] >= 27:
-        world['walkCount'] = 0
-
-    i = world['walkCount'] // 3
-    if world['char_dir'] == 0: # standing
-        win.blit(stand, (world['cx'], world['cy']))
-    if world['char_dir'] == 1: # going right
-        win.blit(walkRight[i], (world['cx'], world['cy']))
-    if world['char_dir'] == -1: # going left
-        win.blit(walkLeft[i], (world['cx'], world['cy']))
-
+    world.draw(win)
     pygame.display.update()
 
-while world['run']:
+while world.run:
     pygame.time.delay(fps)
     world = handle_events(world)
     draw()

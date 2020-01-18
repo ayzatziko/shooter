@@ -18,9 +18,15 @@ def handle_events(w):
 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
-        w['rect'] = (w['rect'][0] - w['vel'], w['rect'][1], w['rect'][2], w['rect'][3])
+        if w['rect'][0] <= w['vel']:
+            pass
+        else:
+            w['rect'] = (w['rect'][0] - w['vel'], w['rect'][1], w['rect'][2], w['rect'][3])
     elif keys[pygame.K_RIGHT]:
-        w['rect'] = (w['rect'][0] + w['vel'], w['rect'][1], w['rect'][2], w['rect'][3])
+        if w['rect'][0] + w['rect'][2] >= displayW - w['vel']:
+            pass
+        else:
+            w['rect'] = (w['rect'][0] + w['vel'], w['rect'][1], w['rect'][2], w['rect'][3])
 
     if not w['isJump']:
         if keys[pygame.K_UP]:

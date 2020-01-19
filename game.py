@@ -1,3 +1,4 @@
+import time
 import pygame
 pygame.init()
 
@@ -5,12 +6,25 @@ class World(object):
     def __init__(self):
         self.run = True
         self.p = Player()
+        self.bb = []
 
     def process(self):
+        for b in self.bb:
+            b.process()
+            if b.x > displayW or b.x < 0:
+                self.bb.pop(self.bb.index(b))
+
         self.p.process()
 
     def draw(self, win):
         self.p.draw(win)
+        for b in self.bb:
+            b.draw(win)
+
+    def player_shoot(self):
+        b = self.p.shoot()
+        if b:
+            self.bb.append(b)
 
 class Player(object):
     _standing = 0
@@ -30,6 +44,7 @@ class Player(object):
         self.jumpCount = 5
         self.jumpHeight = 10
         self.walkCount = 0
+        self.last_shot = 0
 
     def walkLeft(self):
         self.walkCount += 1
@@ -67,6 +82,19 @@ class Player(object):
     def process(self):
         self.processJump()
 
+    def shoot(self):
+        n = int(time.time())
+        if self.last_shot - n == 0:
+            return False
+
+        self.last_shot = n
+        x = self.x + 25
+        if self.direct == self._right:
+            x = self.x + 30
+
+        b = Bullet(x, self.y + 40, self.direct)
+        return b
+
     def draw(self, win):
         if self.walkCount >= 27:
             self.walkCount = 0
@@ -78,6 +106,20 @@ class Player(object):
             win.blit(walkRight[i], (self.x, self.y))
         elif self.direct == self._left: # going left
             win.blit(walkLeft[i], (self.x, self.y))
+
+class Bullet(object):
+    def __init__(self, x, y, direct):
+        self.v = 8 * direct
+        self.x = x
+        self.y = y
+        self.r = 6
+        self.color = (0, 0, 0)
+
+    def process(self):
+        self.x += self.v
+
+    def draw(self, win):
+        pygame.draw.circle(win, self.color, (int(self.x), int(self.y)), self.r)
 
 caption = "Shooter"
 displayW = 500
@@ -106,6 +148,8 @@ def handle_events(w):
         w.p.walkRight()
     if keys[pygame.K_UP]:
         w.p.jump()
+    if keys[pygame.K_SPACE]:
+        w.player_shoot()
 
     w.process()
 

@@ -2,14 +2,23 @@ import time
 import pygame
 pygame.init()
 
+font = pygame.font.SysFont('comicsans', 30, True)
+
 class World(object):
     def __init__(self):
         self.run = True
         self.p = Player()
         self.bb = []
         self.e = Enemy()
+        self.score = 0
+        self.lost = False
 
     def process(self):
+        if self.p.health == 0:
+            self.run = False
+            self.lost = True
+            return
+        
         for b in self.bb:
             b.process()
             if b.x > displayW or b.x < 0:
@@ -21,17 +30,26 @@ class World(object):
         for b in self.bb:
             if b.x + b.r >= self.e.hitbox[0] and b.x - b.r <= self.e.hitbox[0] + self.e.hitbox[2] and b.y + b.r >= self.e.hitbox[1] and b.y - b.r <= self.e.hitbox[1] + self.e.hitbox[3]:
                 self.bb.pop(self.bb.index(b))
+                self.score += 1
 
         if self.e.hitbox[0] + self.e.hitbox[2] >= self.p.hitbox[0] and self.e.hitbox[0] <= self.p.hitbox[0] + self.p.hitbox[2] and self.e.hitbox[1] + self.e.hitbox[3] >= self.p.hitbox[1] and self.e.hitbox[1] <= self.p.hitbox[1] + self.p.hitbox[3]:
             self.p.health -= self.e.dmg
+            if self.p.health < 0:
+                self.p.health = 0
             self.p.x = 30
-            self.p.y = 400
 
     def draw(self, win):
         self.p.draw(win)
         self.e.draw(win)
         for b in self.bb:
             b.draw(win)
+        
+        text = font.render('Score: ' + str(self.score), 1, (0, 0, 0))
+        win.blit(text, (390, 10))
+
+        if self.lost:
+            text = font.render('Lost. Your score: ' + str(self.score), 1, (0, 0, 0))
+            win.blit(text, (100, 200))
 
     def player_shoot(self):
         b = self.p.shoot()
@@ -59,6 +77,7 @@ class Player(object):
         self.last_shot = 0
         self.hitbox = (self.x + 16, self.y + 16, self.w - 27, self.h - 20)
         self.health = 50
+        self.max_health = 50
 
     def walkLeft(self):
         self.walkCount += 1
@@ -122,6 +141,10 @@ class Player(object):
         elif self.direct == self._left: # going left
             win.blit(walkLeft[i], (self.x, self.y))
         pygame.draw.rect(win, (255, 0, 0), self.hitbox, 2)
+
+        bar_len = 50
+        pygame.draw.rect(win, (255, 0, 0), (self.hitbox[0], self.hitbox[1] - 20, bar_len, 10), 2)
+        pygame.draw.rect(win, (255, 0, 0), (self.hitbox[0], self.hitbox[1] - 20, self.health / self.max_health * bar_len, 10))
 
 class Bullet(object):
     def __init__(self, x, y, direct):
@@ -217,6 +240,8 @@ def draw():
     win.blit(bg, (0, 0))
     world.draw(win)
     pygame.display.update()
+    if world.lost:
+        time.sleep(3)
 
 while world.run:
     pygame.time.delay(fps)

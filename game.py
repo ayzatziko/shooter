@@ -18,6 +18,15 @@ class World(object):
         self.p.process()
         self.e.process()
 
+        for b in self.bb:
+            if b.x + b.r >= self.e.hitbox[0] and b.x - b.r <= self.e.hitbox[0] + self.e.hitbox[2] and b.y + b.r >= self.e.hitbox[1] and b.y - b.r <= self.e.hitbox[1] + self.e.hitbox[3]:
+                self.bb.pop(self.bb.index(b))
+
+        if self.e.hitbox[0] + self.e.hitbox[2] >= self.p.hitbox[0] and self.e.hitbox[0] <= self.p.hitbox[0] + self.p.hitbox[2] and self.e.hitbox[1] + self.e.hitbox[3] >= self.p.hitbox[1] and self.e.hitbox[1] <= self.p.hitbox[1] + self.p.hitbox[3]:
+            self.p.health -= self.e.dmg
+            self.p.x = 30
+            self.p.y = 400
+
     def draw(self, win):
         self.p.draw(win)
         self.e.draw(win)
@@ -48,6 +57,8 @@ class Player(object):
         self.jumpHeight = 10
         self.walkCount = 0
         self.last_shot = 0
+        self.hitbox = (self.x + 16, self.y + 16, self.w - 27, self.h - 20)
+        self.health = 50
 
     def walkLeft(self):
         self.walkCount += 1
@@ -87,6 +98,7 @@ class Player(object):
             self.walkCount = 0
 
         self.processJump()
+        self.hitbox = (self.x + 16, self.y + 16, self.w - 27, self.h - 20)
 
     def shoot(self):
         n = int(time.time())
@@ -109,6 +121,7 @@ class Player(object):
             win.blit(walkRight[i], (self.x, self.y))
         elif self.direct == self._left: # going left
             win.blit(walkLeft[i], (self.x, self.y))
+        pygame.draw.rect(win, (255, 0, 0), self.hitbox, 2)
 
 class Bullet(object):
     def __init__(self, x, y, direct):
@@ -129,7 +142,7 @@ class Enemy(object):
     _right = 1
 
     def __init__(self):
-        self.x = 50
+        self.x = 90
         self.y = 400
         self.w = 64
         self.h = 64
@@ -138,6 +151,9 @@ class Enemy(object):
         self.rx = displayW - 40
         self.direct = self._right
         self.walkCount = 0
+        self.hitbox = (self.x + 15, self.y + 5, self.w - 30, self.h - 17)
+        self.dmg = 15
+        self.health = 100
 
     def process(self):
         self.walkCount += 1
@@ -150,6 +166,7 @@ class Enemy(object):
             self.direct = self._right
 
         self.x += self.direct * self.v
+        self.hitbox = (self.x + 15, self.y + 5, self.w - 40, self.h - 17)
 
     def draw(self, win):
 
@@ -158,6 +175,7 @@ class Enemy(object):
             win.blit(walkRightE[i], (self.x, self.y))
         else:
             win.blit(walkLeftE[i], (self.x, self.y))
+        pygame.draw.rect(win, (255, 0, 0), self.hitbox, 2)
 
 caption = "Shooter"
 displayW = 500

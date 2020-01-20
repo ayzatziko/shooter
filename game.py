@@ -7,6 +7,7 @@ class World(object):
         self.run = True
         self.p = Player()
         self.bb = []
+        self.e = Enemy()
 
     def process(self):
         for b in self.bb:
@@ -15,9 +16,11 @@ class World(object):
                 self.bb.pop(self.bb.index(b))
 
         self.p.process()
+        self.e.process()
 
     def draw(self, win):
         self.p.draw(win)
+        self.e.draw(win)
         for b in self.bb:
             b.draw(win)
 
@@ -80,6 +83,9 @@ class Player(object):
         self.y = self.y - h
 
     def process(self):
+        if self.walkCount >= 27:
+            self.walkCount = 0
+
         self.processJump()
 
     def shoot(self):
@@ -96,9 +102,6 @@ class Player(object):
         return b
 
     def draw(self, win):
-        if self.walkCount >= 27:
-            self.walkCount = 0
-
         i = self.walkCount // 3
         if self.direct == self._standing: # standing
             win.blit(stand, (self.x, self.y))
@@ -121,6 +124,41 @@ class Bullet(object):
     def draw(self, win):
         pygame.draw.circle(win, self.color, (int(self.x), int(self.y)), self.r)
 
+class Enemy(object):
+    _left = -1
+    _right = 1
+
+    def __init__(self):
+        self.x = 50
+        self.y = 400
+        self.w = 64
+        self.h = 64
+        self.v = 7
+        self.lx = 40
+        self.rx = displayW - 40
+        self.direct = self._right
+        self.walkCount = 0
+
+    def process(self):
+        self.walkCount += 1
+        if self.walkCount >= 33:
+            self.walkCount = 0
+
+        if self.direct == self._right and self.x + self.w + (self.direct * self.v) >= self.rx:
+            self.direct = self._left
+        elif self.direct == self._left and self.x + (self.direct * self.v) <= self.lx:
+            self.direct = self._right
+
+        self.x += self.direct * self.v
+
+    def draw(self, win):
+
+        i = self.walkCount // 3
+        if self.direct == self._right:
+            win.blit(walkRightE[i], (self.x, self.y))
+        else:
+            win.blit(walkLeftE[i], (self.x, self.y))
+
 caption = "Shooter"
 displayW = 500
 displayH = 500
@@ -130,6 +168,8 @@ world = World()
 # images
 walkRight = [pygame.image.load('R1.png'),pygame.image.load('R2.png'),pygame.image.load('R3.png'),pygame.image.load('R4.png'),pygame.image.load('R5.png'),pygame.image.load('R6.png'),pygame.image.load('R7.png'),pygame.image.load('R8.png'),pygame.image.load('R9.png')]
 walkLeft = [pygame.image.load('L1.png'),pygame.image.load('L2.png'),pygame.image.load('L3.png'),pygame.image.load('L4.png'),pygame.image.load('L5.png'),pygame.image.load('L6.png'),pygame.image.load('L7.png'),pygame.image.load('L8.png'),pygame.image.load('L9.png')]
+walkRightE = [pygame.image.load('R1E.png'),pygame.image.load('R2E.png'),pygame.image.load('R3E.png'),pygame.image.load('R4E.png'),pygame.image.load('R5E.png'),pygame.image.load('R6E.png'),pygame.image.load('R7E.png'),pygame.image.load('R8E.png'),pygame.image.load('R9E.png'),pygame.image.load('R10E.png'),pygame.image.load('R11E.png')]
+walkLeftE = [pygame.image.load('L1E.png'),pygame.image.load('L2E.png'),pygame.image.load('L3E.png'),pygame.image.load('L4E.png'),pygame.image.load('L5E.png'),pygame.image.load('L6E.png'),pygame.image.load('L7E.png'),pygame.image.load('L8E.png'),pygame.image.load('L9E.png'),pygame.image.load('L10E.png'),pygame.image.load('L11E.png')]
 bg = pygame.image.load('bg.jpg')
 stand = pygame.image.load('standing.png')
 

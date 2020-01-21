@@ -2,6 +2,11 @@ import time
 import pygame
 pygame.init()
 
+bullet_sound = pygame.mixer.Sound('bullet.wav')
+hit_sound = pygame.mixer.Sound('hit.wav')
+music = pygame.mixer.music.load('music.wav')
+pygame.mixer.music.play(-1)
+
 font = pygame.font.SysFont('comicsans', 30, True)
 
 class World(object):
@@ -33,6 +38,7 @@ class World(object):
                 self.score += 1
 
         if self.e.hitbox[0] + self.e.hitbox[2] >= self.p.hitbox[0] and self.e.hitbox[0] <= self.p.hitbox[0] + self.p.hitbox[2] and self.e.hitbox[1] + self.e.hitbox[3] >= self.p.hitbox[1] and self.e.hitbox[1] <= self.p.hitbox[1] + self.p.hitbox[3]:
+            hit_sound.play()
             self.p.health -= self.e.dmg
             if self.p.health < 0:
                 self.p.health = 0
@@ -54,6 +60,7 @@ class World(object):
     def player_shoot(self):
         b = self.p.shoot()
         if b:
+            bullet_sound.play()
             self.bb.append(b)
 
 class Player(object):
